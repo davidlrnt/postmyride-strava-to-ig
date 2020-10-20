@@ -1,3 +1,6 @@
+##IN PROGRES - CODE IS NOT FULLY IMPLEMENTED
+
+
 # postmyride-strava-to-ig
 
 
