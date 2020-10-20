@@ -25,6 +25,8 @@ class Activity:
         self.bot = Bot() 
         self.title = ""
         self.description = ""
+        self.bot_msg = "🤖 Post created by PostMyRide, more info: https://github.com/davidlrnt/postmyride-strava-to-ig"
+        self.activity_url = "https://www.strava.com/activities/" + str(id);
 
     def fetch_data(self):   
         r = requests.get("https://www.strava.com/api/v3/activities/{}?include_all_efforts=false".format(self.id), headers=headers)
@@ -108,10 +110,12 @@ class Activity:
         self.bot.login(username = ig_username,  
           password = ig_password)
 
-        full_title = self.title
+        full_title = ( self.title
+            + "\n" + self.activity_url
+            + "\n" + self.bot_msg )
 
         if self.description:
-            full_title += " "
+            full_title += "\n"
             full_title += self.description
 
         if self.photo_count == 1:
