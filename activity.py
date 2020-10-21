@@ -31,7 +31,7 @@ class Activity:
     def fetch_data(self):   
         r = requests.get("https://www.strava.com/api/v3/activities/{}?include_all_efforts=false".format(self.id), headers=headers)
         activity = r.json()
-
+        print(activity)
         self.title = activity["name"]
         self.description = activity["description"] if "description" in activity else ""
 
