@@ -4,4 +4,4 @@
 # postmyride-strava-to-ig
 
 
-Bot utility to post strava activities that have photos to instagram
+Bot utility to post strava activities that include photos to instagram

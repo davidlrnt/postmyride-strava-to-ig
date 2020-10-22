@@ -26,17 +26,9 @@ class RequestHandler(BaseHTTPRequestHandler):
                 mode = query_components['hub.mode'];
                 token = query_components['hub.verify_token'];
                 challenge = query_components['hub.challenge'];
-                print("here", challenge)
                 if mode and token:
                     if mode == "subscribe" and token == VERIFY_TOKEN:
                         print("WEBHOOK_VERIFIED")
-                        print("RETURNING", { "hub.challenge": challenge})
-                        print(json.dumps({
-                            "hub.challenge": challenge
-                        }))
-                        print(json.dumps({
-                            "hub.challenge": challenge
-                        }).encode())
                         self.send_response(200)
                         self.send_header('Content-type', 'application/json')
                         self.end_headers()
@@ -77,7 +69,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             if data["aspect_type"] == "update" and data["object_type"] == "activity":
                 activity_obj = Activity(data["object_id"])
-                activity_obj.fetch_data()
+                activity_obj.fetch_and_post()
             return
 
         self.send_response(200)

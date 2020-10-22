@@ -4,6 +4,7 @@ import glob
 from instabot import Bot
 from PIL import Image
 from configparser import ConfigParser
+from g_map import GMap
 
 parser = ConfigParser()
 parser.read(".env")
@@ -28,14 +29,19 @@ class Activity:
         self.bot_msg = "🤖 Post created by PostMyRide, more info: https://github.com/davidlrnt/postmyride-strava-to-ig"
         self.activity_url = "https://www.strava.com/activities/" + str(id);
 
-    def fetch_data(self):   
+    def fetch_and_post(self):   
         r = requests.get("https://www.strava.com/api/v3/activities/{}?include_all_efforts=false".format(self.id), headers=headers)
         activity = r.json()
-        print(activity)
+        print(activity["name"])
         self.title = activity["name"]
         self.description = activity["description"] if "description" in activity else ""
 
         if activity["total_photo_count"] > 0 and "Virtual" not in activity["type"]:
+
+            m = GMap(activity["map"]["polyline"], activity["start_latlng"], activity["end_latlng"])
+            m.fetch_image()
+            self.resize("pictmp/map.jpeg")
+
             rp = requests.get("https://www.strava.com/api/v3/activities/{}/photos?photo_sources=true&size=1080".format(self.id), headers=headers)
             photos = rp.json()
             self.photo_count = len(photos)
@@ -44,9 +50,9 @@ class Activity:
             for i,photo in enumerate(photos):
                 title = ""
                 if photo["default_photo"]:
-                    title = "pic0.jpg".format(pic_id)
+                    title = "pic0.jpeg".format(pic_id)
                 else:
-                    title = "pic{}.jpg".format(pic_id)
+                    title = "pic{}.jpeg".format(pic_id)
                     pic_id += 1
 
                 with open("pictmp/" + title, 'wb') as handle:
@@ -63,10 +69,13 @@ class Activity:
 
                 self.resize("pictmp/" + title)
 
-            self.create_ig_post()
+            self.create_ig_post(True)
 
     def resize(self, image_pil):
         im = Image.open(image_pil)
+        # im.convert('RGB')
+        if im.mode != 'RGB':
+            im = im.convert('RGB')
 
         width  = im.size[0]
         height = im.size[1]
@@ -106,7 +115,7 @@ class Activity:
         thumb.save(image_pil)
 
 
-    def create_ig_post(self):
+    def create_ig_post(self, show_map):
         self.bot.login(username = ig_username,  
           password = ig_password)
 
@@ -118,19 +127,21 @@ class Activity:
             full_title += "\n"
             full_title += self.description
 
-        if self.photo_count == 1:
-            self.bot.upload_photo("./pictmp/pic0.jpg",  
+        if self.photo_count == 1 and not show_map:
+            self.bot.upload_photo("./pictmp/pic0.jpeg",  
                 caption = full_title) 
         else:
             album = []
 
             for i in range(self.photo_count):
-                album.append("./pictmp/pic{}.jpg".format(i))
+                album.append("./pictmp/pic{}.jpeg".format(i))
+
+            album.append("./pictmp/map.jpeg")
 
             self.bot.upload_album(album,  
                        caption = full_title) 
 
 
-        files = glob.glob('/pictmp/*')
+        files = glob.glob('./pictmp/*')
         for f in files:
             os.remove(f)

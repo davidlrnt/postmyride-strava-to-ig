@@ -43,3 +43,4 @@ try:
 
 except IOError:
     print("cannot create thumbnail for '%s'" % infile)
+
